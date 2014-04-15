@@ -24,6 +24,7 @@ data LispVal = Atom String
              | Number Integer
              | String String
              | Bool Bool
+             | Character Char
 
 parseBool :: Parser LispVal
 parseBool = do
@@ -69,6 +70,15 @@ parseBin = do try $ string "#b"
               x <- many1 (oneOf "10")
               return $ Number (bin2dig x)
 
+parseCharacter :: Parser LispVal
+parseCharacter = do try $ string "#\\"
+                    value <- try (string "newline" <|> string "space")
+                             <|> do { x <- anyChar; notFollowedBy alphaNum ; return [x] }
+                    return $ Character $ case value of
+                                         "space" -> ' '
+                                         "newline" -> '\n'
+                                         otherwise -> (value !! 0)
+
 oct2dig x = fst $ readOct x !! 0
 hex2dig x = fst $ readHex x !! 0
 bin2dig = bin2dig' 0
@@ -102,9 +112,10 @@ parseQuoted =
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
          <|> parseString
-         <|> parseNumber
-         <|> parseBool
-         <|> parseQuoted
+         <|> try parseNumber
+         <|> try parseBool
+         <|> try parseQuoted
+         <|> try parseCharacter
          <|> do char '('
                 x <- (try parseList) <|> parseDottedList
                 char ')'

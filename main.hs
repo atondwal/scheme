@@ -26,6 +26,7 @@ data LispVal = Atom String
              | String String
              | Bool Bool
              | Character Char
+             | Ratio Rational
 
 parseBool :: Parser LispVal
 parseBool = do
@@ -101,6 +102,12 @@ parseFloat = do i <- many1 digit
                 f <- many1 digit
                 return $ Float (read (i++'.':f) :: Float)
 
+parseRatio :: Parser LispVal
+parseRatio = do n <- many1 digit
+                char '/'
+                d <- many1 digit
+                return $ Ratio (read (n++'%':d) :: Rational)
+                
 parseList :: Parser LispVal
 parseList = List <$> sepBy parseExpr spaces
 
@@ -124,6 +131,7 @@ parseExpr = parseAtom
          <|> try parseQuoted
          <|> try parseCharacter
          <|> try parseFloat
+         <|> try parseRatio
          <|> do char '('
                 x <- (try parseList) <|> parseDottedList
                 char ')'

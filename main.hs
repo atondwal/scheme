@@ -119,6 +119,18 @@ parseComplex = do Float r <- parseFloat
 parseList :: Parser LispVal
 parseList = List <$> sepBy parseExpr spaces
 
+parseQuasiQuoted :: Parser LispVal
+parseQuasiQuoted = do
+                char '`'
+                x <- parseExpr
+                return $ List [Atom "quasiquote", x]
+
+parseUnQuote :: Parser LispVal
+parseUnQuote = do
+                char ','
+                x <- parseExpr
+                return $ List [Atom "unquote", x]
+
 parseDottedList :: Parser LispVal
 parseDottedList = do
   h <- endBy parseExpr spaces
@@ -141,6 +153,8 @@ parseExpr = parseAtom
          <|> try parseFloat
          <|> try parseRatio
          <|> try parseComplex
+         <|> try parseQuasiQuoted
+         <|> try parseUnQuote
          <|> do char '('
                 x <- (try parseList) <|> parseDottedList
                 char ')'

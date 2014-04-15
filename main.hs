@@ -3,6 +3,7 @@ import Control.Applicative ((<$>),(<*>))
 import System.Environment
 import Text.ParserCombinators.Parsec hiding (spaces)
 import Numeric
+import Data.Complex
 
 main :: IO ()
 main = getArgs >>= putStrLn . readExpr . head 
@@ -27,6 +28,7 @@ data LispVal = Atom String
              | Bool Bool
              | Character Char
              | Ratio Rational
+             | Complex (Complex Float)
 
 parseBool :: Parser LispVal
 parseBool = do
@@ -107,6 +109,12 @@ parseRatio = do n <- many1 digit
                 char '/'
                 d <- many1 digit
                 return $ Ratio (read (n++'%':d) :: Rational)
+
+parseComplex :: Parser LispVal
+parseComplex = do Float r <- parseFloat
+                  char '/'
+                  Float i <- parseFloat
+                  return $ Complex ( r :+ i )
                 
 parseList :: Parser LispVal
 parseList = List <$> sepBy parseExpr spaces
@@ -132,6 +140,7 @@ parseExpr = parseAtom
          <|> try parseCharacter
          <|> try parseFloat
          <|> try parseRatio
+         <|> try parseComplex
          <|> do char '('
                 x <- (try parseList) <|> parseDottedList
                 char ')'

@@ -22,6 +22,7 @@ data LispVal = Atom String
              | List [LispVal]
              | DottedList [LispVal] LispVal
              | Number Integer
+             | Float Float
              | String String
              | Bool Bool
              | Character Char
@@ -94,6 +95,12 @@ parseNumber =  parseDigital1
            <|> parseOct
            <|> parseBin
 
+parseFloat :: Parser LispVal
+parseFloat = do i <- many1 digit
+                char '.'
+                f <- many1 digit
+                return $ Float (read (i++'.':f) :: Float)
+
 parseList :: Parser LispVal
 parseList = List <$> sepBy parseExpr spaces
 
@@ -116,6 +123,7 @@ parseExpr = parseAtom
          <|> try parseBool
          <|> try parseQuoted
          <|> try parseCharacter
+         <|> try parseFloat
          <|> do char '('
                 x <- (try parseList) <|> parseDottedList
                 char ')'

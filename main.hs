@@ -28,6 +28,7 @@ data LispVal = Atom String
              | Bool Bool
              | Character Char
              | Ratio Rational
+             | Vector [LispVal]
              | Complex (Complex Float)
 
 parseBool :: Parser LispVal
@@ -115,7 +116,13 @@ parseComplex = do Float r <- parseFloat
                   char '/'
                   Float i <- parseFloat
                   return $ Complex ( r :+ i )
-                
+
+parseVector :: Parser LispVal
+parseVector = do string "#("
+                 vals <- sepBy parseExpr spaces
+                 string ")"
+                 return $ Vector vals
+
 parseList :: Parser LispVal
 parseList = List <$> sepBy parseExpr spaces
 
@@ -155,6 +162,7 @@ parseExpr = parseAtom
          <|> try parseComplex
          <|> try parseQuasiQuoted
          <|> try parseUnQuote
+         <|> try parseVector
          <|> do char '('
                 x <- (try parseList) <|> parseDottedList
                 char ')'

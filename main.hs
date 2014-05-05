@@ -36,13 +36,15 @@ data LispVal = Atom String
 
 instance Show LispVal where show = showVal
 showVal :: LispVal -> String
-showVal (String contents) = "\"" ++ contents ++ "\""
 showVal (Atom name) = name
-showVal (Number contents) = show contents
-showVal (Bool True) = "#t"
-showVal (Bool False) = "#f"
 showVal (List contents) = "(" ++ unwordsList contents ++ ")"
 showVal (DottedList head tail) = "(" ++ unwordsList head ++ " . " ++ showVal tail ++ ")"
+showVal (Number contents) = show contents
+showVal (Float contents) = show contents
+showVal (String contents) = "\"" ++ contents ++ "\""
+showVal (Bool True) = "#t"
+showVal (Bool False) = "#f"
+showVal (Character c) = "#\\" ++ [c]
 
 ------------------------------
 -- Error handling
@@ -66,6 +68,7 @@ showError (NumArgs expected found) = "Expected " ++ show expected
 showError (TypeMismatch expected found) = "Invalid type: expected " ++ expected
                                        ++ ", found " ++ show found
 showError (Parser parseErr) = "Parse error at " ++ show parseErr
+showError (Default error) = "Error: " ++ error
 
 instance Error LispError where
      noMsg = Default "An error has occurred"
@@ -295,31 +298,58 @@ equal [arg1, arg2] = do
 equal badArgList = throwError $ NumArgs 2 badArgList
 
 makestring :: [LispVal] -> ThrowsError LispVal
-makestring [k] = do
-  k <- unpackNum k
-  let k' = fromIntegral k
-  return (String (replicate k' '!'))
+makestring [Number k] = makestring (Number k : [Character '!'])
+makestring (Number k : [Character c]) = return (String (replicate (fromInteger k) c))
+makestring badArgList = throwError $ NumArgs 2 badArgList
 
 stringlength :: [LispVal] -> ThrowsError LispVal
-stringlength _ = return $ String ""
+stringlength [String s] = return $ Number $ toInteger (length s)
+stringlength badArgList = throwError $ NumArgs 1 badArgList
 
 stringref :: [LispVal] -> ThrowsError LispVal
-stringref _ = return $ String ""
+stringref ((String s) : [Number k]) = 
+    let k' = fromInteger k
+    in
+    if k' < length s then
+        return $ Character $ s !! (fromInteger k)
+        else
+            throwError $ Default $
+                "string-ref out of bounds (" ++ show k' ++ " > length " ++ show s ++ ")"
+stringref badArgList = throwError $ NumArgs 2 badArgList
 
 substring :: [LispVal] -> ThrowsError LispVal
-substring _ = return $ String ""
+substring (String s : (Number start) : [Number end]) =
+    let start' = fromInteger start
+        end' = fromInteger end
+    in
+    if (0 <= start') && (start' <= end') && (end' <= (length s)) then
+        let finalS = take (end' - start') $ drop start' s in
+        return $ String $ finalS
+        else
+            throwError $ Default $
+                "substring out of bounds"
 
 stringappend :: [LispVal] -> ThrowsError LispVal
-stringappend _ = return $ String ""
+stringappend [] = return $ String ""
+stringappend [String s] = return $ String s
+stringappend (String s : rest) = do
+    String rest' <- stringappend rest
+    return $ String (s ++ rest')
+stringappend badArgList = throwError $ TypeMismatch "String" $ head badArgList
 
 string2list :: [LispVal] -> ThrowsError LispVal
-string2list _ = return $ String ""
+string2list [String s] = return $ List $ map (\c -> Character c) s
+string2list [badArg] = throwError $ TypeMismatch "String" badArg
+string2list badArgList = throwError $ NumArgs 1 badArgList
 
 list2string :: [LispVal] -> ThrowsError LispVal
-list2string _ = return $ String ""
+list2string [List cs] = return $ String $ map (\(Character c) -> c) cs
+list2string [Vector cs] = return $ String $ map (\(Character c) -> c) cs
+list2string [badArg] = throwError $ TypeMismatch "List of Characters" badArg
+list2string badArgList = throwError $ NumArgs 1 badArgList
 
 stringcopy :: [LispVal] -> ThrowsError LispVal
-stringcopy _ = return $ String ""
+stringcopy [String s] = return $ String s
 
 --------------------------------------------------------------------------------
 -- Parser

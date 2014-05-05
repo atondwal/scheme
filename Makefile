@@ -1,5 +1,5 @@
 main: main.hs
-	ghc main.hs
+	ghc -XExistentialQuantification main.hs
 
 tests := $(wildcard tests/*.ss)
 

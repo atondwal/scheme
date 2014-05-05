@@ -210,7 +210,15 @@ primitives = [("+", numericBinop (+)),
               ("cons", car),
               ("eq?", eqv),
               ("eqv?", eqv),
-              ("equal?", equal)]
+              ("equal?", equal),
+              ("make-string", makestring),
+              ("string-length", stringlength),
+              ("string-ref", stringref),
+              ("substring", substring),
+              ("string-append", stringappend),
+              ("string->list", string2list),
+              ("list->string", list2string),
+              ("string-copy", stringcopy) ]
 
 isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True
@@ -280,11 +288,38 @@ equal :: [LispVal] -> ThrowsError LispVal
 equal [l1@(List arg1), l2@(List arg2)] = eqvList equal [l1, l2]
 equal [(DottedList xs x), (DottedList ys y)] = equal [List $ xs ++ [x], List $ ys ++ [y]]
 equal [arg1, arg2] = do
-    primitiveEquals <- liftM or $ mapM (unpackEquals arg1 arg2)
+  primitiveEquals <- liftM or $ mapM (unpackEquals arg1 arg2)
                        [AnyUnpacker unpackNum, AnyUnpacker unpackStr, AnyUnpacker unpackBool]
-    eqvEquals <- eqv [arg1, arg2]
-    return $ Bool $ (primitiveEquals || let (Bool x) = eqvEquals in x)
+  eqvEquals <- eqv [arg1, arg2]
+  return $ Bool $ (primitiveEquals || let (Bool x) = eqvEquals in x)
 equal badArgList = throwError $ NumArgs 2 badArgList
+
+makestring :: [LispVal] -> ThrowsError LispVal
+makestring [k] = do
+  k <- unpackNum k
+  let k' = fromIntegral k
+  return (String (replicate k' '!'))
+
+stringlength :: [LispVal] -> ThrowsError LispVal
+stringlength _ = return $ String ""
+
+stringref :: [LispVal] -> ThrowsError LispVal
+stringref _ = return $ String ""
+
+substring :: [LispVal] -> ThrowsError LispVal
+substring _ = return $ String ""
+
+stringappend :: [LispVal] -> ThrowsError LispVal
+stringappend _ = return $ String ""
+
+string2list :: [LispVal] -> ThrowsError LispVal
+string2list _ = return $ String ""
+
+list2string :: [LispVal] -> ThrowsError LispVal
+list2string _ = return $ String ""
+
+stringcopy :: [LispVal] -> ThrowsError LispVal
+stringcopy _ = return $ String ""
 
 --------------------------------------------------------------------------------
 -- Parser

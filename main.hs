@@ -545,7 +545,11 @@ stringcopy :: [LispVal] -> ThrowsError LispVal
 stringcopy [String s] = return $ String s
 
 createimage :: [LispVal] -> ThrowsError LispVal
-createimage _ = return $ String "foo"
+createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) =
+    let i = generateFoldImage f initAcc w h
+        f acc x y = -- apply func (Func fp fv fb fc) ((Number x) : [Number y])
+        initAcc = 
+    return $ Image i
 
 getpixel :: [LispVal] -> ThrowsError LispVal
 getpixel _ = return $ String "foo"

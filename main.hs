@@ -548,8 +548,10 @@ stringappend [] = return $ String ""
 stringappend [String s] = return $ String s
 stringappend (String s : rest) = do
     String rest' <- stringappend rest
-    return $ String (s ++ show rest')
-stringappend badArgList = throwError $ TypeMismatch "String" $ head badArgList
+    return $ String (s ++ rest')
+stringappend (s : rest) = do
+    String rest' <- stringappend rest
+    return $ String (show s ++ rest')
 
 string2list :: [LispVal] -> ThrowsError LispVal
 string2list [String s] = return $ List $ map (\c -> Character c) s

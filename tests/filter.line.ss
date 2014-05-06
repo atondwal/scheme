@@ -20,7 +20,7 @@
 
 (define img (read-image "test.gif"))
 
-(define t 0)
+(define t 2)
 
 (define (comment) (define img0 (create-image (image-width img) (image-height img) (genWarpFunc img 0.0 waves))))
 
@@ -29,5 +29,5 @@
 (define (comment) (define times '(0 1 2 3 4 5 6 7 8 9)))
 
 (define warped (create-image (image-width img) (image-height img) (genWarpFunc img (/f 1.0 (i2f t)) waves)))
-(define outfilename (string-append (string-append "warp_small" t) ".gif"))
+(define outfilename (string-append (string-append "warp" t) ".gif"))
 (write-image outfilename warped)

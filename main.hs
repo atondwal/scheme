@@ -378,6 +378,8 @@ primitives = [("+", numericBinop (+)),
               ("list->string", list2string),
               ("string-copy", stringcopy),
               ("create-image", createimage),
+              ("image-width", imagewidth),
+              ("image-height", imageheight),
               ("get-pixel", getpixel)]
 
 applyProc :: [LispVal] -> IOThrowsError LispVal
@@ -566,7 +568,13 @@ createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Im
                  return $ generateImage (\x y -> thearray ! (fi x, fi y)) (fi w) (fi h)
         fi a = fromIntegral a
 
+imagewidth :: [LispVal] -> ThrowsError LispVal
+imagewidth [Main.Image i] = return $ Number $ toInteger $ imageWidth i
+imagewidth badArgList = throwError $ NumArgs 1 badArgList
 
+imageheight :: [LispVal] -> ThrowsError LispVal
+imageheight [Main.Image i] = return $ Number $ toInteger $ imageHeight i
+imageheight badArgList = throwError $ NumArgs 1 badArgList
 
 getpixel :: [LispVal] -> ThrowsError LispVal
 getpixel ((Main.Image i) : (Number x) : (Number y) : (Number c) : []) =

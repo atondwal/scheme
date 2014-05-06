@@ -551,7 +551,18 @@ createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) =
     return $ Image i
 
 getpixel :: [LispVal] -> ThrowsError LispVal
-getpixel _ = return $ String "foo"
+getpixel ((Main.Image i) : (Number x) : (Number y) : (Number c) : []) =
+    let PixelRGB8 r g b = pixelAt i x y
+        f = case c of
+            0 -> r
+            1 -> g
+            2 -> b
+    in
+    if (c > 2 || c < 0) then
+        return $ throwError $ Default $ "c out of bounds"
+    else
+        return $ Float f
+getpixel badArgList = throwError $ NumArgs 4 badArgList
 
 --------------------------------------------------------------------------------
 -- Parser

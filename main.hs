@@ -561,7 +561,7 @@ getpixel ((Main.Image i) : (Number x) : (Number y) : (Number c) : []) =
     if (c > 2 || c < 0) then
         return $ throwError $ Default $ "c out of bounds"
     else
-        return $ Float f
+        return $ Float (f / 255.0)
 getpixel badArgList = throwError $ NumArgs 4 badArgList
 
 --------------------------------------------------------------------------------

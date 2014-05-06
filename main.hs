@@ -97,6 +97,7 @@ showVal (Ratio r) = "#\\" ++ show r
 showVal (Complex c) = "#\\" ++ show c
 showVal (PrimitiveFunc _) = "<primitive>"
 showVal (Port _) = "<IO port>"
+showVal (Main.Image _) = "<Image>"
 showVal (IOFunc _) = "<IO primitive>"
 showVal (Func {params = args, vararg = varargs, body = body, closure = env}) = 
   "(lambda (" ++ unwords (map show args) ++ 

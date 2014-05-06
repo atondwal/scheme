@@ -362,8 +362,8 @@ primitives = [("+", numericBinop (+)),
               ("symbol2string", unaryOp symbol2string),
               ("string2symbol", unaryOp string2symbol),
               ("car", car),
-              ("cdr", car),
-              ("cons", car),
+              ("cdr", cdr),
+              ("cons", cons),
               ("eq?", eqv),
               ("eqv?", eqv),
               ("equal?", equal),
@@ -561,7 +561,18 @@ createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Im
 
 
 getpixel :: [LispVal] -> ThrowsError LispVal
-getpixel _ = return $ String "foo"
+getpixel ((Main.Image i) : (Number x) : (Number y) : (Number c) : []) =
+    let PixelRGB8 r g b = pixelAt i x y
+        f = case c of
+            0 -> r
+            1 -> g
+            2 -> b
+    in
+    if (c > 2 || c < 0) then
+        return $ throwError $ Default $ "c out of bounds"
+    else
+        return $ Float (f / 255.0)
+getpixel badArgList = throwError $ NumArgs 4 badArgList
 
 --------------------------------------------------------------------------------
 -- Parser

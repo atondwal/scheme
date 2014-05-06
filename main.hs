@@ -413,7 +413,8 @@ readimage [String filename] = do
 
 -- FIXME FIXME FIXME
 writeimage :: [LispVal] -> IOThrowsError LispVal
-writeimage (String filename : [Main.Image i]) = liftM List $ load filename
+writeimage (String filename : [Main.Image i]) =
+    (liftIO $ savePngImage filename (ImageRGB8 i)) >> return $ Bool True
 
 isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True

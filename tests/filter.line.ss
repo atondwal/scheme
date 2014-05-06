@@ -18,10 +18,16 @@
 
 (define waves (cons (cons (-f 0.0 0.1) (cons (-f 0.0 0.15) (cons 10.0 (cons 0.2 3.0)))) (cons (-f 0.0 0.1) (cons (-f 0.0 0.15) (cons 10.0 (cons 0.2 3.0))))))
 
-(define img (read-image "test_small.gif"))
+(define img (read-image "test.gif"))
 
-(define img0 (create-image (image-width img) (image-height img) (genWarpFunc img 0.0 waves)))
+(define t 0)
 
-(write-image "warp_small.gif" img0)
+(define (comment) (define img0 (create-image (image-width img) (image-height img) (genWarpFunc img 0.0 waves))))
 
-(define times '(0 1 2 3 4 5 6 7 8 9))
+(define (comment) (write-image "warp.gif" img0))
+
+(define (comment) (define times '(0 1 2 3 4 5 6 7 8 9)))
+
+(define warped (create-image (image-width img) (image-height img) (genWarpFunc img (/f 1.0 (i2f t)) waves)))
+(define outfilename (string-append (string-append "warp_small" t) ".gif"))
+(write-image outfilename warped)

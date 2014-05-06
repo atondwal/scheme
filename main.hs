@@ -272,6 +272,7 @@ boolBinop unpacker op args = if length args /= 2
                                      right <- unpacker $ args !! 1
                                      return $ Bool $ left `op` right
 
+floatBoolBinop = boolBinop unpackNum
 numBoolBinop = boolBinop unpackNum
 strBoolBinop = boolBinop unpackStr
 boolBoolBinop = boolBinop unpackBool
@@ -348,6 +349,12 @@ primitives = [("+", numericBinop (+)),
               ("/=", numBoolBinop (/=)),
               (">=", numBoolBinop (>=)),
               ("<=", numBoolBinop (<=)),
+              ("=f", floatBoolBinop (==)),
+              ("<f", floatBoolBinop (<)),
+              (">f", floatBoolBinop (>)),
+              ("/=f", floatBoolBinop (/=)),
+              (">=f", floatBoolBinop (>=)),
+              ("<=f", floatBoolBinop (<=)),
               ("&&", boolBoolBinop (&&)),
               ("||", boolBoolBinop (||)),
               ("string=?", strBoolBinop (==)),

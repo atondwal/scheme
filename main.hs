@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 import Codec.Picture
 import Data.IORef
 import System.IO
@@ -8,6 +9,7 @@ import System.Environment
 import Text.ParserCombinators.Parsec hiding (spaces)
 import Numeric
 import Data.Complex
+import Debug.Trace
 
 ------------------------------
 -- REPL
@@ -193,6 +195,7 @@ bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
 -- Evaluator
 --------------------------------------------------------------------------------
 eval :: Env -> LispVal -> IOThrowsError LispVal
+eval env val@(Float _) = return val
 eval env val@(String _) = return val
 eval env val@(Number _) = return val
 eval env val@(Bool _) = return val
@@ -257,6 +260,9 @@ unaryOp f (x:_) = throwError $ Default
   "Unary function expected a single argument. Multiple provided."
 unaryOp f [] = throwError $ Default "Unary function expected an argument"
 
+unaryFlOp :: (Float -> Float) -> [LispVal] -> ThrowsError LispVal
+unaryFlOp op params = mapM unpackFloat params >>= return . Float . op . head
+
 boolBinop :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
 boolBinop unpacker op args = if length args /= 2 
                              then throwError $ NumArgs 2 args
@@ -267,6 +273,15 @@ boolBinop unpacker op args = if length args /= 2
 numBoolBinop = boolBinop unpackNum
 strBoolBinop = boolBinop unpackStr
 boolBoolBinop = boolBinop unpackBool
+
+floatBinop :: (Float -> Float -> Float) -> [LispVal] -> ThrowsError LispVal
+floatBinop op           []  = throwError $ NumArgs 2 []
+floatBinop op singleVal@[_] = throwError $ NumArgs 2 singleVal
+floatBinop op params = mapM unpackFloat params >>= return . Float . foldl1 op
+
+unpackFloat :: LispVal -> ThrowsError Float
+unpackFloat (Float n) = return n
+unpackFloat x = throwError $ TypeMismatch "float" $ x
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop op           []  = throwError $ NumArgs 2 []
@@ -313,6 +328,14 @@ primitives = [("+", numericBinop (+)),
               ("-", numericBinop (-)),
               ("*", numericBinop (*)),
               ("/", numericBinop div),
+              ("+f", floatBinop (+)),
+              ("-f", floatBinop (-)),
+              ("*f", floatBinop (*)),
+              ("/f", floatBinop (/)),
+              ("sqrt", unaryFlOp sqrt),
+              ("sin", unaryFlOp sin),
+              ("cos", unaryFlOp cos),
+              ("exp", unaryFlOp exp),
               ("mod", numericBinop mod),
               ("quotient", numericBinop quot),
               ("remainder", numericBinop rem),
@@ -657,13 +680,13 @@ parseQuoted =
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
          <|> parseString
+         <|> try parseComplex
+         <|> try parseFloat
          <|> try parseNumber
          <|> try parseBool
          <|> try parseQuoted
          <|> try parseCharacter
-         <|> try parseFloat
          <|> try parseRatio
-         <|> try parseComplex
          <|> try parseQuasiQuoted
          <|> try parseUnQuote
          <|> try parseVector

@@ -405,7 +405,7 @@ readContents :: [LispVal] -> IOThrowsError LispVal
 readContents [String filename] = liftM String $ liftIO $ readFile filename
 
 load :: String -> IOThrowsError [LispVal]
-load filename = (liftIO $ filter (/= '\n') <$> readFile filename) >>= liftThrows . readExprList
+load filename = (liftIO $ readFile filename) >>= liftThrows . readExprList
 
 readAll :: [LispVal] -> IOThrowsError LispVal
 readAll [String filename] = liftM List $ load filename

@@ -272,7 +272,7 @@ boolBinop unpacker op args = if length args /= 2
                                      right <- unpacker $ args !! 1
                                      return $ Bool $ left `op` right
 
-floatBoolBinop = boolBinop unpackNum
+floatBoolBinop = boolBinop unpackFloat
 numBoolBinop = boolBinop unpackNum
 strBoolBinop = boolBinop unpackStr
 boolBoolBinop = boolBinop unpackBool

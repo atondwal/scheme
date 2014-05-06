@@ -272,7 +272,7 @@ boolBinop unpacker op args = if length args /= 2
                                      right <- unpacker $ args !! 1
                                      return $ Bool $ left `op` right
 
-floatBoolBinop = boolBinop unpackNum
+floatBoolBinop = boolBinop unpackFloat
 numBoolBinop = boolBinop unpackNum
 strBoolBinop = boolBinop unpackStr
 boolBoolBinop = boolBinop unpackBool
@@ -551,7 +551,7 @@ stringappend [] = return $ String ""
 stringappend [String s] = return $ String s
 stringappend (String s : rest) = do
     String rest' <- stringappend rest
-    return $ String (s ++ rest')
+    return $ String (s ++ show rest')
 stringappend badArgList = throwError $ TypeMismatch "String" $ head badArgList
 
 string2list :: [LispVal] -> ThrowsError LispVal

@@ -582,12 +582,14 @@ imageheight badArgList = throwError $ NumArgs 1 badArgList
 
 getpixel :: [LispVal] -> ThrowsError LispVal
 getpixel ((Main.Image i) : (Number x) : (Number y) : (Number c) : []) =
-    let PixelRGB8 r g b = pixelAt i (fromIntegral x) (fromIntegral y)
-        f = case c of
-            0 -> r
-            1 -> g
-            2 -> b
-    in return $ Float (fromIntegral f / 255.0)
+    if (x >= 0) && (x < (toInteger $ imageWidth i)) && (y >= 0) && (y < (toInteger $ imageHeight i)) then
+      let PixelRGB8 r g b = pixelAt i (fromIntegral x) (fromIntegral y)
+          f = case c of
+              0 -> r
+              1 -> g
+              2 -> b
+      in return $ Float (fromIntegral f / 255.0)
+    else return $ Float 0.0
 getpixel badArgList = throwError $ NumArgs 4 badArgList
 
 --------------------------------------------------------------------------------

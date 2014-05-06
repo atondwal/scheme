@@ -420,6 +420,7 @@ readAll [String filename] = liftM List $ load filename
 
 fromEither :: Either a b -> b
 fromEither (Right a) = a
+fromEither _ = error "No inputs file"
 
 readimage :: [LispVal] -> IOThrowsError LispVal
 readimage [String filename] = lift (Main.Image <$> img)

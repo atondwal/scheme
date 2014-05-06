@@ -9,7 +9,9 @@ import System.Environment
 import Text.ParserCombinators.Parsec hiding (spaces)
 import Numeric
 import Data.Complex
+import Data.Array
 import Debug.Trace
+import System.IO.Unsafe
 
 ------------------------------
 -- REPL
@@ -543,12 +545,20 @@ list2string badArgList = throwError $ NumArgs 1 badArgList
 stringcopy :: [LispVal] -> ThrowsError LispVal
 stringcopy [String s] = return $ String s
 
-createimage :: [LispVal] -> ThrowsError LispVal
-createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) =
-    let i = generateFoldImage f initAcc w h
-        f acc x y = -- apply func (Func fp fv fb fc) ((Number x) : [Number y])
-        initAcc = 
-    return $ Image i
+createimage :: [LispVal] -> IOThrowsError LispVal
+createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Image =<< ans
+  where arry = sequence [ monf x y >>= return . ((,) (x,y)) | x <- [0..w], y<-[0..h]] >>= return . (array ((0,0),(w,h)))
+        monf :: Integer -> Integer -> IOThrowsError PixelRGB8
+        monf x y = do (Float r) <- apply f [Number (fi x),Number (fi y), Number 0]
+                      (Float g) <- apply f [Number (fi x),Number (fi y), Number 1]
+                      (Float b) <- apply f [Number (fi x),Number (fi y), Number 2]
+                      return $ PixelRGB8 (floor$ 255*r) (floor$ 255*g) (floor$ 255*b)
+        ans :: IOThrowsError (Image PixelRGB8)
+        ans = do thearray <- arry
+                 return $ generateImage (\x y -> thearray ! (fi x, fi y)) (fi w) (fi h)
+        fi a = fromIntegral a
+
+
 
 getpixel :: [LispVal] -> ThrowsError LispVal
 getpixel _ = return $ String "foo"

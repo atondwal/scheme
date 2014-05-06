@@ -4,9 +4,11 @@
 
 (define comment "foo")
 
-(define (func x y c) (define cur 0.0)
-  (set! cur (+f cur (get-pixel img (+ x 1) y c))) (set! cur (+f cur (get-pixel img (- x 1) y c))) (set! cur (+f cur (get-pixel img x y c))) cur)
+(define (blur x y c) (define cur 0.0) (set! cur (+f cur (get-pixel img (+ x 1) y c))) (set! cur (+f cur (get-pixel img (- x 1) y c))) (set! cur (+f cur (get-pixel img x (+ y 1) c))) (set! cur (+f cur (get-pixel img x (- y 1) c))) (/f cur 4.0))
 
-(define img2 (create-image (image-width img) (image-height img) func))
+(define img2 (create-image (image-width img) (image-height img) blur))
+(define img3 (create-image (image-width img2) (image-height img) blur))
+(define img4 (create-image (image-width img3) (image-height img) blur))
+(define img5 (create-image (image-width img4) (image-height img) blur))
 
-(write-image "blur.gif" img2)
+(write-image "blur.gif" img5)

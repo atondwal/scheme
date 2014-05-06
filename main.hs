@@ -323,7 +323,8 @@ ioPrimitives = [("apply", applyProc),
                 ("read-contents", readContents),
                 ("read-all", readAll),
                 ("read-image", readimage),
-                ("write-image", writeimage)]
+                ("write-image", writeimage),
+                ("create-image", createimage)]
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives = [("+", numericBinop (+)),
@@ -377,7 +378,6 @@ primitives = [("+", numericBinop (+)),
               ("string->list", string2list),
               ("list->string", list2string),
               ("string-copy", stringcopy),
-              ("create-image", createimage),
               ("image-width", imagewidth),
               ("image-height", imageheight),
               ("get-pixel", getpixel)]
@@ -558,8 +558,8 @@ list2string badArgList = throwError $ NumArgs 1 badArgList
 stringcopy :: [LispVal] -> ThrowsError LispVal
 stringcopy [String s] = return $ String s
 
-createimage :: [LispVal] -> ThrowsError LispVal
-createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = Main.Image <$> unsafePerformIO (runErrorT ans)
+createimage :: [LispVal] -> IOThrowsError LispVal
+createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = Main.Image <$> ans
   where arry = sequence [ monf x y >>= return . ((,) (x,y)) | x <- [0..w], y<-[0..h]] >>= return . (array ((0,0),(w,h)))
         monf :: Integer -> Integer -> IOThrowsError PixelRGB8
         monf x y = do (Float r) <- apply f [Number (fi x),Number (fi y), Number 0]

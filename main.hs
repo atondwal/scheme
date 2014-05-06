@@ -408,16 +408,17 @@ load filename = (liftIO $ readFile filename) >>= liftThrows . readExprList
 readAll :: [LispVal] -> IOThrowsError LispVal
 readAll [String filename] = liftM List $ load filename
 
+fromEither :: Either a b -> b
+fromEither (Right a) = a
+
 readimage :: [LispVal] -> IOThrowsError LispVal
-readimage [String filename] = do
-  img <- liftIO $ readImage filename
-  case img of
-    Right (ImageRGB8 i) -> return $ Main.Image i
-    _ -> liftThrows (throwError $ Default $ "Unable to open image: " ++ filename)
+readimage [String filename] = lift (Main.Image <$> img)
+        where img :: IO (Image PixelRGB8)
+              img = head <$> fromEither <$> readGifImages filename
 
 writeimage :: [LispVal] -> IOThrowsError LispVal
 writeimage (String filename : img@(Main.Image i) :[]) =
-  (lift $ savePngImage filename (ImageRGB8 i)) >> return img
+  (lift $ fromEither $ saveGifImage filename (ImageRGB8 i)) >> return img
 
 isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True
@@ -554,7 +555,7 @@ stringcopy :: [LispVal] -> ThrowsError LispVal
 stringcopy [String s] = return $ String s
 
 createimage :: [LispVal] -> ThrowsError LispVal
-createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Image =<< unsafePerformIO (runErrorT ans)
+createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = Main.Image <$> unsafePerformIO (runErrorT ans)
   where arry = sequence [ monf x y >>= return . ((,) (x,y)) | x <- [0..w], y<-[0..h]] >>= return . (array ((0,0),(w,h)))
         monf :: Integer -> Integer -> IOThrowsError PixelRGB8
         monf x y = do (Float r) <- apply f [Number (fi x),Number (fi y), Number 0]

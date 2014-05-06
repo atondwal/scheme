@@ -545,8 +545,8 @@ list2string badArgList = throwError $ NumArgs 1 badArgList
 stringcopy :: [LispVal] -> ThrowsError LispVal
 stringcopy [String s] = return $ String s
 
-createimage :: [LispVal] -> IOThrowsError LispVal
-createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Image =<< ans
+createimage :: [LispVal] -> ThrowsError LispVal
+createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Image =<< unsafePerformIO (runErrorT ans)
   where arry = sequence [ monf x y >>= return . ((,) (x,y)) | x <- [0..w], y<-[0..h]] >>= return . (array ((0,0),(w,h)))
         monf :: Integer -> Integer -> IOThrowsError PixelRGB8
         monf x y = do (Float r) <- apply f [Number (fi x),Number (fi y), Number 0]
@@ -562,16 +562,12 @@ createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = return .  Main.Im
 
 getpixel :: [LispVal] -> ThrowsError LispVal
 getpixel ((Main.Image i) : (Number x) : (Number y) : (Number c) : []) =
-    let PixelRGB8 r g b = pixelAt i x y
+    let PixelRGB8 r g b = pixelAt i (fromIntegral x) (fromIntegral y)
         f = case c of
             0 -> r
             1 -> g
             2 -> b
-    in
-    if (c > 2 || c < 0) then
-        return $ throwError $ Default $ "c out of bounds"
-    else
-        return $ Float (f / 255.0)
+    in return $ Float (fromIntegral f / 255.0)
 getpixel badArgList = throwError $ NumArgs 4 badArgList
 
 --------------------------------------------------------------------------------

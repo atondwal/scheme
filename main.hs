@@ -417,10 +417,12 @@ readimage :: [LispVal] -> IOThrowsError LispVal
 readimage [String filename] = lift (Main.Image <$> img)
         where img :: IO (Image PixelRGB8)
               img = head <$> fromEither <$> readGifImages filename
+readimage badArgList = throwError $ NumArgs 1 badArgList
 
 writeimage :: [LispVal] -> IOThrowsError LispVal
 writeimage (String filename : img@(Main.Image i) :[]) =
   (lift $ fromEither $ saveGifImage filename (ImageRGB8 i)) >> return img
+writeimage badArgList = throwError $ NumArgs 2 badArgList
 
 isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True
@@ -568,6 +570,7 @@ createimage ((Number w) : (Number h) : f@(Func _ _ _ _) :[]) = Main.Image <$> un
         ans = do thearray <- arry
                  return $ generateImage (\x y -> thearray ! (fi x, fi y)) (fi w) (fi h)
         fi a = fromIntegral a
+createimage badArgList = throwError $ NumArgs 3 badArgList
 
 imagewidth :: [LispVal] -> ThrowsError LispVal
 imagewidth [Main.Image i] = return $ Number $ toInteger $ imageWidth i

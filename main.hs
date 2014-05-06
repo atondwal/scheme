@@ -367,6 +367,8 @@ primitives = [("+", numericBinop (+)),
               ("eq?", eqv),
               ("eqv?", eqv),
               ("equal?", equal),
+              ("f2i", f2i),
+              ("i2f", i2f),
               ("make-string", makestring),
               ("string-length", stringlength),
               ("string-ref", stringref),
@@ -490,6 +492,12 @@ equal [arg1, arg2] = do
   eqvEquals <- eqv [arg1, arg2]
   return $ Bool $ (primitiveEquals || let (Bool x) = eqvEquals in x)
 equal badArgList = throwError $ NumArgs 2 badArgList
+
+f2i :: [LispVal] -> ThrowsError LispVal
+f2i [Float f] = return $ Number (floor f)
+
+i2f :: [LispVal] -> ThrowsError LispVal
+i2f [Number n] = return $ Float (fromIntegral n)
 
 makestring :: [LispVal] -> ThrowsError LispVal
 makestring [Number k] = makestring (Number k : [Character '!'])

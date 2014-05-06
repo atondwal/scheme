@@ -1,3 +1,4 @@
+import Codec.Picture
 import Data.IORef
 import System.IO
 import Control.Monad
@@ -73,6 +74,7 @@ data LispVal = Atom String
              | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
              | IOFunc ([LispVal] -> IOThrowsError LispVal)
              | Port Handle
+             | Image (Image PixelRGB8)
              | Func {
                  params :: [String],
                  vararg :: (Maybe String),
@@ -301,7 +303,9 @@ ioPrimitives = [("apply", applyProc),
                 ("read", readProc),
                 ("write", writeProc),
                 ("read-contents", readContents),
-                ("read-all", readAll)]
+                ("read-all", readAll),
+                ("read-image", readimage),
+                ("write-image", writeimage)]
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives = [("+", numericBinop (+)),
@@ -344,7 +348,9 @@ primitives = [("+", numericBinop (+)),
               ("string-append", stringappend),
               ("string->list", string2list),
               ("list->string", list2string),
-              ("string-copy", stringcopy) ]
+              ("string-copy", stringcopy),
+              ("create-image", createimage),
+              ("get-pixel", getpixel)]
 
 applyProc :: [LispVal] -> IOThrowsError LispVal
 applyProc [func, List args] = apply func args
@@ -373,6 +379,17 @@ load filename = (liftIO $ readFile filename) >>= liftThrows . readExprList
 
 readAll :: [LispVal] -> IOThrowsError LispVal
 readAll [String filename] = liftM List $ load filename
+
+readimage :: [LispVal] -> IOThrowsError LispVal
+readimage [String filename] = do
+  img <- liftIO $ readImage filename
+  case img of
+    Right (ImageRGB8 i) -> return $ Main.Image i
+    _ -> liftThrows (throwError $ Default $ "Unable to open image: " ++ filename)
+
+-- FIXME FIXME FIXME
+writeimage :: [LispVal] -> IOThrowsError LispVal
+writeimage (String filename : [Main.Image i]) = liftM List $ load filename
 
 isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True
@@ -501,6 +518,12 @@ list2string badArgList = throwError $ NumArgs 1 badArgList
 
 stringcopy :: [LispVal] -> ThrowsError LispVal
 stringcopy [String s] = return $ String s
+
+createimage :: [LispVal] -> ThrowsError LispVal
+createimage _ = return $ String "foo"
+
+getpixel :: [LispVal] -> ThrowsError LispVal
+getpixel _ = return $ String "foo"
 
 --------------------------------------------------------------------------------
 -- Parser

@@ -411,10 +411,9 @@ readimage [String filename] = do
     Right (ImageRGB8 i) -> return $ Main.Image i
     _ -> liftThrows (throwError $ Default $ "Unable to open image: " ++ filename)
 
--- FIXME FIXME FIXME
 writeimage :: [LispVal] -> IOThrowsError LispVal
-writeimage (String filename : [Main.Image i]) =
-    (liftIO $ savePngImage filename (ImageRGB8 i)) >> return $ Bool True
+writeimage (String filename : img@(Main.Image i) :[]) =
+  (lift $ savePngImage filename (ImageRGB8 i)) >> return img
 
 isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True

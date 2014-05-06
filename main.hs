@@ -365,6 +365,7 @@ primitives = [("+", numericBinop (+)),
               ("symbol?", unaryOp isSymbol),
               ("number?", unaryOp isNumber),
               ("string?", unaryOp isString),
+              ("null?", unaryOp isNull),
               ("bool?", unaryOp isBool),
               ("list?", unaryOp isList),
               ("symbol2string", unaryOp symbol2string),
@@ -431,13 +432,15 @@ writeimage (String filename : img@(Main.Image i) :[]) =
   (lift $ fromEither $ saveGifImage filename (ImageRGB8 i)) >> return img
 writeimage badArgList = throwError $ NumArgs 2 badArgList
 
-isSymbol, isNumber, isString, isBool, isList :: LispVal -> LispVal
+isSymbol, isNumber, isString, isNull, isBool, isList :: LispVal -> LispVal
 isSymbol (Atom _) = Bool True
 isSymbol _ = Bool False
 isNumber (Number _) = Bool True
 isNumber _ = Bool False
 isString (String _) = Bool True
 isString _ = Bool False
+isNull (List []) = Bool True
+isNull _ = Bool False
 isBool (Bool _) = Bool True
 isBool _ = Bool False
 isList (List _) = Bool True
